@@ -25,7 +25,7 @@ You'll get a warning if anything fails to install properly.
 
 
 ```{r Set parameters}
-abundance.dir <- "./../Projet_doctorat/RNAseq/RNAseq_LorenzoData/abundance/all_sample/"
+abundance.dir <- # pathway of your abundance folder 
 geneset.dir <- "./GeneSet"
 message.delay.time <- 1
 Be.Chatty <- TRUE
