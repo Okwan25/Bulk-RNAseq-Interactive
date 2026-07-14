@@ -1,0 +1,14 @@
+#R
+library(tmod)
+data(tmod)
+capture.output(tmod$MODULES2GENES, file = "my_list.txt")
+write.table(tmod$MODULES, file="modules.tsv", quote=FALSE, row.names=FALSE, sep="\t")
+
+cat my_list.txt | tr " " "\n"  | grep -v "\[" | tr "\"" "\n" | sed '/^$/d' | tr "$" ">" | awk '/^>/ {printf("\n%s\ttmod\t",$0);next; } { printf("%s\t",$0);}  END {printf("\n");}' | sed '/^$/d' | sed 's/>//g' > tmod.gmt
+
+tail -n +2 modules.tsv | cut -f 1 > col1
+tail -n +2 modules.tsv | awk -F "\t" '{ print $1"-"$2 }' | tr " " "_" | tr "/" "-" > col2
+paste -d "\t" col1 col2 > array.txt
+awk 'NR==FNR{a[$1]=$2;next}$1 in a{print a[$1] }' array.txt tmod.gmt > good_col1
+cat tmod.gmt | cut -f 2- > good_col2
+paste -d "\t" good_col1 good_col2 > tmod_final.gmt
