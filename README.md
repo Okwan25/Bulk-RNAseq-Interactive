@@ -1,6 +1,6 @@
 Welcome to the bulk-RNAseq analysis without code ! 
 
-This version is to help biologist to analyze theses data. 
+This simplified version of the DEGs analysis pipeline will try to take care of your analysis as much as possible.
 
 Please follow theses step: 
 
