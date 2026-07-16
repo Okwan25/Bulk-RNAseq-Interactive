@@ -4,7 +4,7 @@ if (Be.Chatty == TRUE){
   Sys.sleep(message.delay.time)
 }
 
-choisir_elements <- function(id) {
+choose_elements <- function(id) {
   
   elements <- strsplit(id, "-")[[1]]
   
@@ -12,28 +12,28 @@ choisir_elements <- function(id) {
     cat(i, ":", elements[i], "\n")
   }
   
-  choix_patient <- as.numeric(readline(
-    prompt = "Which one is your PATIENT ID: "
+  choose_ID <- as.numeric(readline(
+    prompt = "Which one is your SAMPLE ID: "
   ))
   
-  choix_condition <- as.numeric(readline(
+  choose_condition <- as.numeric(readline(
     prompt = "Which one is your CONDITION : "
   ))
   
   if (
-    !is.na(choix_patient) &&
-    !is.na(choix_condition) &&
-    choix_patient %in% seq_along(elements) &&
-    choix_condition %in% seq_along(elements) &&
-    choix_patient == choix_condition
+    !is.na(choose_ID) &&
+    !is.na(choose_condition) &&
+    choose_ID %in% seq_along(elements) &&
+    choose_condition %in% seq_along(elements) &&
+    choose_ID == choose_condition
   ) {
     cat("\nInvalid X \n")
     return(NULL)
   }
     
     resultat <- list(
-      patient = choix_patient,
-      condition = choix_condition
+      ID = choose_ID,
+      condition = choose_condition
     )
     
     return(resultat)
@@ -41,28 +41,25 @@ choisir_elements <- function(id) {
 
 id <- sample_id[1]
 
-result <- choisir_elements(id)
+result <- choose_elements(id)
 
-message("Patient :", result$patient, "\n")
+message("ID :", result$ID, "\n")
 message("Condition :", result$condition, "\n")
 
 message("\nLet show your raw data: \n")
 
-Condition1 <- dge.condition[1]
-Condition2 <- dge.condition[2]
-
 selection <- sample_id[grepl(paste0("(", Condition1, "|", Condition2, ")$"), sample_id)]
 
-find_incomplete_pairs <- function(samples, Condition1, Condition2) {
-  sel <- samples[grepl(paste0("-(", Condition1, "|", Condition2, ")$"), samples, perl = TRUE)]
+find_incomplete_pairs <- function(IDs, Condition1, Condition2) {
+  sel <- IDs[grepl(paste0("-(", Condition1, "|", Condition2, ")$"), IDs, perl = TRUE)]
   if (length(sel) == 0) return(character(0))
-  patient <- sapply(strsplit(sel, "-"), function(x) x[length(x)-1])
+  ID <- sapply(strsplit(sel, "-"), function(x) x[length(x)-1])
   suffix  <- sub(".*-", "", sel)  
-  present <- split(suffix, patient)
-  incomplete_patients <- names(present)[
+  present <- split(suffix, ID)
+  incomplete_ID <- names(present)[
     !vapply(present, function(x) all(c(Condition1, Condition2) %in% unique(x)), logical(1))
   ]
-  sel[patient %in% incomplete_patients]
+  sel[ID %in% incomplete_ID]
 }
 
 if (paired) {
@@ -83,12 +80,12 @@ message("\nLet sort your file ...\n")
 
 metadata <- data.frame(
   filename = sample_id,
-  patient = sapply(strsplit(sample_id, "-"), `[`, 2),
+  ID = sapply(strsplit(sample_id, "-"), `[`, 2),
   condition = sapply(strsplit(sample_id, "-"), `[`, 3),
   stringsAsFactors = FALSE
 )
 
-metadata <- metadata[order(metadata$condition, metadata$patient), ]
+metadata <- metadata[order(metadata$condition, metadata$ID), ]
 print(table(metadata$condition))
 
 message("\nGo next part\n")

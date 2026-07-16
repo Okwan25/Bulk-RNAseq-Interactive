@@ -1,28 +1,28 @@
 if (Be.Chatty == TRUE){
   cat( 
-    "Let to generate gene expresssion from kallisto output.\n")
+    "Let to generate gene expresssion from kallisto output then filter gene expression.\n")
   
   Sys.sleep(message.delay.time)
 }
 
 files <- file.path(base_dir, sample_id, "abundance.tsv")
 names(files) <- paste0(sample_id)
-tx2gene <- read.delim("./GeneSet/ENST_HGNC_protein_coding_noUnattributed.txt")
+tx2gene <- read.delim("../GeneSet/ENST_HGNC_protein_coding_noUnattributed.txt")
 txi <- tximport(files, type = "kallisto", tx2gene = tx2gene, ignoreTxVersion = T)
 countsData <- txi$counts
 
 
-metadata$patient <- factor(metadata$patient); metadata$condition <- factor(metadata$condition)
+metadata$ID <- factor(metadata$ID); metadata$condition <- factor(metadata$condition)
 
 if (paired == TRUE){
-  design = ~ patient+condition
+  design = ~ ID+condition
 } else {
   design = ~ condition
 }
-  
+
 ddsTxi <- DESeqDataSetFromTximport(txi = txi,
-                                     colData = metadata,
-                                     design = design)
+                                   colData = metadata,
+                                   design = design)
 
 threshold.gene.expression <- readline( "What is the threshold of gene expression (ex: 32)? ")
 threshold.gene.expression <- as.numeric(threshold.gene.expression)

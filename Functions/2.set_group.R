@@ -9,7 +9,7 @@ for visualization.\n\n")
   Sys.sleep(message.delay.time)
 }
 
-base_dir <- abundance.dir
+base_dir <- rstudioapi::selectDirectory()
 sample_id <- dir(base_dir)
 
 cat("\nExample of your filename: ", sample_id[1], "\n")
@@ -22,7 +22,7 @@ parse_samples <- function(samples) {
   
   data.frame(
     sample = samples,
-    patient = sapply(split_names, function(x) {
+    ID = sapply(split_names, function(x) {
       if (length(x) < 2) return(NA)
       x[length(x)-1]
     }),
@@ -48,10 +48,26 @@ if (length(conditions) < 2) {
 }
 
 # -------------------------
-# 🔹 3. USER SELECTS 2 GROUPS
+# 🔹 3. PAIRED ?
 # -------------------------
-idx1 <- menu(conditions, title = "Select FIRST condition")
-idx2 <- menu(conditions, title = "Select SECOND condition")
+
+paired.or.not <- menu(
+  c("Yes", "No"),
+  title = "Are your samples paired? (That is, for any given sample, it appears in both conditions)"
+)
+
+if (paired.or.not == 1) {
+  paired = TRUE
+} else {
+  paired = FALSE
+}
+
+
+# -------------------------
+# 🔹 4. USER SELECTS 2 GROUPS
+# -------------------------
+idx1 <- menu(conditions, title = "Select REFERENCE condition")
+idx2 <- menu(conditions, title = "Select TEST condition")
 
 if (idx1 == 0 || idx2 == 0) {
   stop("Selection cancelled.")
@@ -63,10 +79,13 @@ if (idx1 == idx2) {
 
 dge.condition <- conditions[c(idx1, idx2)]
 
-cat("\nSelected comparison: ", dge.condition[1], " vs ", dge.condition[2], "\n")
+Condition1 <- dge.condition[1]
+Condition2 <- dge.condition[2]
+
+cat("\nSelected comparison: ", Condition2, " vs ", Condition1, "\n")
 
 # -------------------------
-# 🔹 4. OPTIONAL RENAMING
+# 🔹 5. OPTIONAL RENAMING
 # -------------------------
 want.to.rename.groups <- menu(
   c("Yes", "No"),
@@ -104,7 +123,7 @@ cat("\n")
 Sys.sleep(message.delay.time)
 
 # -------------------------
-# 🔹 5. FILTER DATA
+# 🔹 6. FILTER DATA
 # -------------------------
 meta <- meta[meta$condition %in% dge.condition, ]
 
@@ -113,19 +132,15 @@ if (nrow(meta) == 0) {
 }
 
 # -------------------------
-# 🔹 6. ORDER SAMPLES
+# 🔹 7. ORDER SAMPLES
 # -------------------------
 
-# convertir patient en numérique (IMPORTANT)
-meta$patient_num <- as.numeric(meta$patient)
+meta$ID_num <- as.numeric(meta$ID)
 
-# garder ordre des conditions choisi
 meta$condition <- factor(meta$condition, levels = dge.condition)
 
-# tri
-meta <- meta[order(meta$condition, meta$patient_num), ]
+meta <- meta[order(meta$condition, meta$ID_num), ]
 
-# update
 sample_id <- meta$sample
 rm(meta)
 

@@ -6,12 +6,12 @@ ranks <- sort(ranks, decreasing = T)
 
 geneList <- file.choose()
 
-# Vérification (optionnel)
+# Check (optionnel)
 if (!grepl("\\.gmt$", geneList)) {
   stop("Please choose a .gmt file")
 }
 
-# Afficher le chemin choisi
+# Show the pathway 
 print(basename(geneList))
 cat("\n")
 pathway <- gmtPathways(geneList)

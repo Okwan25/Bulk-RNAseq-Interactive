@@ -5,7 +5,7 @@ if (Be.Chatty == TRUE){
   cat( 
 "Welcome to GENEration!\n
 This simplified version of the DEGs analysis\n
-pipeline will try to take care of as much as possible.\n
+pipeline will try to take care of your analysis as much as possible.\n
 \n"
   )
   Sys.sleep(message.delay.time)
@@ -28,7 +28,7 @@ that you don't already have installed.\n
 
 required.packages <- c(
  "tximport", "edgeR", "limma", "Glimma",
- "fgsea", "GSEABase", "GSVA", "EDASeq", "DESeq2", "coda"
+ "fgsea", "GSEABase", "GSVA", "EDASeq", "DESeq2", "coda", "rstudioapi", "ComplexHeatmap"
 )
 
 cran.packages <- c(

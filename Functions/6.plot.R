@@ -1,19 +1,25 @@
 #Function plot to see the expression of the top gene 
 plot_top_gene_expression <- function(dds, DGE_RESULT, thr.gene){
+  gene = head(rezzy_2,1)$gene
   df <- plotCounts(dds,
                    gene=head(DGE_RESULT,thr.gene)$gene,
                    intgroup = "condition",
                    returnData = TRUE)
-  
-  # transformation log2 (avec pseudo-count pour éviter log(0))
-  df$log_count <- log2(df$count + 1)
-  
-  p <- ggplot(df, aes(x = condition, y = log_count)) +
-    geom_point(position = position_jitter(width = 0.1)) +
-    theme_minimal() +
-    ylab("log2(normalized counts + 1)")
+    p <- ggplot(df, aes(x=condition, y=count, color=condition, fill=condition)) +
+    geom_boxplot(alpha=0.4, outlier.shape = NA) +  
+    geom_jitter(width=0.1, size=2, alpha=0.8) +   
+    theme_classic() +
+    scale_color_brewer(palette="Set1") +
+    scale_fill_brewer(palette="Set1") +
+    scale_y_log10()+
+    labs(
+      x = "condition",
+      y = "log10(norm count)",
+      title = paste0("Expression of ", gene)
+    )
   print(p)
 }
+
 
 #Function plot histogramm of FC and pval
 plot_histogram <- function(DGE_RESULT, parameter, #log2FoldChange or pvalue 
@@ -25,16 +31,41 @@ plot_histogram <- function(DGE_RESULT, parameter, #log2FoldChange or pvalue
 }
 
 #Function plot heatmap
-plot_heatmap <- function(top_genes, scale, #"row" or "col"
-                         thr.fontsize_row, thr.fontsize_col,
-                         bool.cluster_cols, bool.cluster_rows){
-  pheatmap::pheatmap(log2(counts(dds) + 1)[top_genes,],
-                     scale=scale,
-                     fontsize_row = thr.fontsize_row, 
-                     fontsize_col = thr.fontsize_col,
-                     cluster_cols = bool.cluster_cols, 
-                     cluster_rows = bool.cluster_rows,
-                     main = "Heatmap of gene expression")
+plot_complex_heatmap <- function(heatmap_input, top_genes,
+                                 cluster_columns, cluster_rows,
+                                 row_names_gp, column_names_gp,
+                                 title){
+  
+  mat <- log2(heatmap_input + 1)[top_genes, ]
+  mat_scaled <- t(scale(t(mat)))
+  
+  annotation_col <- data.frame(
+    Condition = colData(dds)$condition
+  )
+  rownames(annotation_col) <- colnames(mat_scaled)
+  ha <- HeatmapAnnotation(
+    df = annotation_col,
+    col = list(
+      Condition = setNames(
+        c("#377EB8", "#E41A1C"),
+        c(Condition1, Condition2)
+      )
+    )
+  )
+  
+  plot_heatmap <- Heatmap(
+    mat_scaled,
+    name = "Z-score",
+    top_annotation = ha,
+    cluster_columns = cluster_columns,
+    cluster_rows = cluster_rows,
+    row_names_gp = gpar(fontsize = row_names_gp),
+    column_names_gp = gpar(fontsize = column_names_gp),
+    show_column_names = TRUE,
+    show_row_names = TRUE,
+    column_title = title
+  )
+  return(plot_heatmap)
 }
 
 #Function plot volcano-plot
@@ -58,9 +89,6 @@ plot_volcano <- function(df, thr.logFC, thr.pvalue){
     geom_hline(yintercept=-log10(thr.pvalue), col="red") + 
     theme( legend.text = element_text(size = 6.5),
            legend.title = element_text(size = 7)) 
-    #xlim(-3.5,3.5) + 
-    #ylim(0, 25)   
-  
   return(list(plot = g, data = df))
 }
 
@@ -90,26 +118,44 @@ plot_histogram(DGE_RESULT = rezzy_2, "pvalue", thr.breaks = 50)
 ##
 rezzy_Condition2 <- rezzy_2 %>% arrange(desc(log2FoldChange))
 top_genes <- head(rezzy_Condition2$gene, 50)
-plot_heatmap(top_genes = top_genes, scale = "row",
-             thr.fontsize_row = 5.5,
-             thr.fontsize_col = 4,
-             bool.cluster_cols = F,
-             bool.cluster_rows = F)
+heatmap_input = counts(dds)
+
+heatmap.condition.test <- plot_complex_heatmap(heatmap_input = heatmap_input,
+                                               top_genes = top_genes,
+                                               cluster_columns = FALSE,
+                                               cluster_rows = FALSE,
+                                               row_names_gp = 5.5,
+                                               column_names_gp = 4.5,
+                                               title = "Top on TEST condition")
+
 
 rezzy_Condition1 <- rezzy_2 %>% arrange(log2FoldChange)
 top_genes <- head(rezzy_Condition1$gene, 50)
-plot_heatmap(top_genes = top_genes, scale = "row",
-             thr.fontsize_row = 5.5,
-             thr.fontsize_col = 4,
-             bool.cluster_cols = F,
-             bool.cluster_rows = F)
+
+heatmap.condition.ref <- plot_complex_heatmap(heatmap_input = heatmap_input,
+                                              top_genes = top_genes,
+                                              cluster_columns = FALSE,
+                                              cluster_rows = FALSE,
+                                              row_names_gp = 5.5,
+                                              column_names_gp = 4.5,
+                                              title = "Top on REFERENCE condition")
+
+
+print(heatmap.condition.test)
+print(heatmap.condition.ref)
 ##
 
 ##
-thr.pvalue <- readline( "(Volcano-plot) What is the threshold of pval ? ")
+thr.pvalue <- readline( "(Volcano-plot) What is the threshold of pval ? (ex: 0.05): ")
+while (is.na(as.numeric(thr.pvalue))) {
+  thr.pvalue <- readline("Invalid value. Please enter a numeric p-value (ex: 0.05): ")
+}
 thr.pvalue <- as.numeric(thr.pvalue)
 
-thr.FC <- readline( "(Volcano-plot) What is the threshold of FC ? ")
+thr.FC <- readline( "(Volcano-plot) What is the threshold of FC ? (ex: 1.5): ")
+while (is.na(as.numeric(thr.FC))) {
+  thr.FC <- readline("Invalid value. Please enter a numeric p-value (ex: 1.5): ")
+}
 thr.FC <- as.numeric(thr.FC)
 
 volcano <- plot_volcano(df = rezzy_2, thr.logFC = log10(thr.FC), thr.pvalue = thr.pvalue)
