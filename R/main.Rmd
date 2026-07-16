@@ -38,7 +38,20 @@ source( "../Functions/0.startup.R" )
 source( "../Functions/1.load_runchecks.R")
 ```
 
-# 2) Set Condition
+* WARNING ! * 
+If you already have your matrix of gene expression, please go directly in the section "1.1. "
+Else, please go in the section "2. .
+
+# 1.1) 
+
+```{r}
+source("../Functions/1.1.start_with_countsData.R")
+```
+
+
+# 2) Set Condition 
+
+Please put all your abundance (alignment output) folder in the same folder.
 
 ```{r Load packages}
 source( "../Functions/2.set_group.R")
@@ -55,6 +68,7 @@ source( "../Functions/3.check_data.R")
 ```{r, warning=F, message=F}
 source( "../Functions/4.generate_gene_expression.R")
 ```
+
 
 # 5) DGE
 
